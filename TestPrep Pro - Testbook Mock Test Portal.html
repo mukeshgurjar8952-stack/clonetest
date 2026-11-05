@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="hi" class="h-full bg-slate-100 text-slate-800">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TestPrep Pro - Testbook Mock Test Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans Devanagari', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Exact Testbook / TCS iON Question Palette Color Standards */
+    .status-answered { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+    .status-not-answered { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+    .status-marked { background-color: #8b5cf6 !important; color: white !important; border-color: #7c3aed !important; }
+    .status-marked-answered { background-color: #8b5cf6 !important; color: white !important; border-color: #7c3aed !important; position: relative; }
+    .status-marked-answered::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 7px;
+      height: 7px;
+      background-color: #22c55e;
+      border-radius: 9999px;
+      border: 1px solid white;
+    }
+    .status-not-visited { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans bg-slate-100 text-slate-800 antialiased select-none overflow-hidden">
+
+  <!-- TOP HEADER -->
+  <header class="flex-none bg-white border-b border-slate-200 px-3 sm:px-4 py-2 sm:py-2.5 shadow-sm z-30">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+      
+      <!-- Brand & Test Selector -->
+      <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm flex-shrink-0">
+          T
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-sm sm:text-base text-slate-900 truncate">TestPrep Pro</span>
+            <span class="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-700 hidden sm:inline">Testbook Mode</span>
+          </div>
+          <!-- Test Switcher Dropdown -->
+          <select id="testSelectDropdown" class="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 focus:outline-none focus:border-blue-500 font-medium max-w-[150px] sm:max-w-[220px] truncate">
+            <option value="mock_ssc_cgl_1">SSC CGL 2026 Tier 1 Mock (10 Qs)</option>
+            <option value="mock_raj_cet_2">Rajasthan CET & State Mock (5 Qs)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Live Countdown Timer -->
+      <div id="timerContainer" class="flex items-center gap-1.5 sm:gap-2 bg-slate-900 text-white px-2.5 sm:px-3 py-1 rounded-xl font-mono text-xs sm:text-sm font-bold shadow-inner flex-shrink-0">
+        <svg class="w-3.5 h-3.5 text-amber-400 animate-spin" style="animation-duration: 4s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="text-[11px] text-slate-400 font-sans hidden md:inline">Time Left:</span>
+        <span id="timerDisplay" class="text-amber-400">15:00</span>
+      </div>
+
+      <!-- Right Controls: Language, Palette Drawer Button, Submit -->
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        <!-- Language Switcher -->
+        <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-300 text-xs font-semibold">
+          <button id="langHiBtn" class="px-2 py-0.5 sm:py-1 rounded-md bg-blue-600 text-white shadow-xs transition">हिंदी</button>
+          <button id="langEnBtn" class="px-2 py-0.5 sm:py-1 rounded-md text-slate-600 hover:text-slate-900 transition">English</button>
+        </div>
+
+        <!-- Mobile Palette Toggle Button -->
+        <button id="toggleMobilePaletteBtn" class="md:hidden p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1" title="Question Palette">
+          <span>📋</span>
+          <span id="mobilePaletteBadge" class="text-[11px] font-bold text-blue-600">1/10</span>
+        </button>
+
+        <!-- New Test Creator Button -->
+        <button id="openCustomTestModalBtn" class="hidden lg:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-medium transition" title="Add Custom Questions">
+          <span>+ Create Test</span>
+        </button>
+
+        <!-- Submit Button -->
+        <button id="headerSubmitBtn" class="px-3 sm:px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm transition flex items-center gap-1">
+          <span>Submit</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN TEST INTERFACE -->
+  <main class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT COLUMN: QUESTION & OPTIONS AREA (Takes 100% on mobile, 70% on desktop) -->
+    <div id="questionMainArea" class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+      
+      <!-- Section Bar -->
+      <div class="flex-none bg-slate-50 border-b border-slate-200 px-3 sm:px-6 py-2 flex items-center justify-between gap-2 overflow-x-auto">
+        <div class="flex items-center gap-1.5" id="sectionTabsContainer">
+          <!-- Injected dynamically -->
+        </div>
+        <div class="text-[11px] sm:text-xs font-semibold text-slate-600 flex items-center gap-2 flex-shrink-0">
+          <span class="text-emerald-600 font-bold" id="positiveMarks">+2.00</span>
+          <span class="text-slate-300">|</span>
+          <span class="text-rose-500 font-bold" id="negativeMarks">-0.50</span>
+        </div>
+      </div>
+
+      <!-- Question & Options Scroll Container -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+
+        <!-- Question Title Header -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm sm:text-base text-blue-700 bg-blue-50 px-3 py-1 rounded-lg border border-blue-200" id="questionNumberBadge">
+              प्रश्न 1 / 10
+            </span>
+            <span class="text-xs text-slate-500 font-medium" id="questionSectionBadge">General Awareness</span>
+          </div>
+          <span class="text-[11px] text-slate-400 hidden sm:inline">Single Choice Objective (एक सही विकल्प)</span>
+        </div>
+
+        <!-- Question Text Display -->
+        <div class="bg-slate-50/80 p-3.5 sm:p-4 rounded-xl border border-slate-200 text-slate-900 text-sm sm:text-base font-semibold leading-relaxed" id="questionTextDisplay">
+          <!-- Question text injected here -->
+        </div>
+
+        <!-- Options Container (ALWAYS VISIBLE & PROMINENT) -->
+        <div>
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">विकल्प चुनें (Select One Option):</p>
+          <div class="space-y-3" id="optionsContainer">
+            <!-- Dynamic 4 Options Injected here -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Action Footer -->
+      <div class="flex-none bg-slate-50 border-t border-slate-200 px-3 sm:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <button id="markReviewBtn" class="px-3 py-2 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-semibold transition">
+            Mark for Review
+          </button>
+          <button id="clearResponseBtn" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 text-xs font-semibold transition">
+            Clear
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <button id="prevQuestionBtn" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold transition">
+            &larr; Previous
+          </button>
+          <button id="saveNextBtn" class="px-4 sm:px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-500/20 transition flex items-center gap-1">
+            <span>Save &amp; Next &rarr;</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: QUESTION PALETTE (Docked on Desktop, Drawer on Mobile) -->
+    <div id="paletteSidebar" class="fixed md:static inset-y-0 right-0 z-40 w-72 sm:w-80 md:w-72 lg:w-80 bg-slate-50 border-l border-slate-200 flex flex-col h-full transform translate-x-full md:translate-x-0 transition-transform duration-200 shadow-xl md:shadow-none">
+      
+      <!-- Sidebar Header (Mobile close button) -->
+      <div class="p-3 bg-white border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs">
+            👤
+          </span>
+          <div class="text-xs">
+            <p class="font-bold text-slate-800">Aspirant Candidate</p>
+            <p class="text-[11px] text-slate-500" id="sidebarTestName">SSC CGL Mock</p>
+          </div>
+        </div>
+        <button id="closeMobilePaletteBtn" class="md:hidden text-slate-400 hover:text-slate-700 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Legend (Testbook Palette) -->
+      <div class="p-3 bg-slate-100/90 border-b border-slate-200 text-[11px] grid grid-cols-2 gap-2 text-slate-700">
+        <div class="flex items-center gap-1.5">
+          <span class="w-4 h-4 rounded flex items-center justify-center font-bold text-[10px] status-answered">✓</span>
+          <span>Answered (<strong id="countAnswered">0</strong>)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-4 h-4 rounded flex items-center justify-center font-bold text-[10px] status-not-answered">✗</span>
+          <span>Not Answered (<strong id="countNotAnswered">0</strong>)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-4 h-4 rounded flex items-center justify-center font-bold text-[10px] status-not-visited">○</span>
+          <span>Not Visited (<strong id="countNotVisited">10</strong>)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-4 h-4 rounded flex items-center justify-center font-bold text-[10px] status-marked">★</span>
+          <span>Marked Review (<strong id="countMarked">0</strong>)</span>
+        </div>
+      </div>
+
+      <!-- Question Grid Palette -->
+      <div class="flex-1 overflow-y-auto p-3">
+        <p class="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">प्रश्न संख्या (Question Palette):</p>
+        <div class="grid grid-cols-5 gap-2" id="questionGridContainer">
+          <!-- 1, 2, 3... buttons dynamically injected -->
+        </div>
+      </div>
+
+      <!-- Bottom Palette Submit Button -->
+      <div class="p-3 bg-white border-t border-slate-200">
+        <button id="paletteSubmitBtn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition">
+          Submit Full Test
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Drawer Backdrop -->
+    <div id="paletteBackdrop" class="fixed inset-0 bg-slate-950/50 z-30 hidden md:hidden"></div>
+
+  </main>
+
+  <!-- VIEW 2: SCORECARD & PERFORMANCE ANALYSIS (Modal/Overlay on Submit) -->
+  <div id="resultModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6 hidden overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-4xl w-full my-auto p-4 sm:p-6 lg:p-8 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Scorecard Header -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+            Test Submitted Successfully
+          </span>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1" id="resultTestTitle">Scorecard &amp; Analysis</h2>
+          <p class="text-xs text-slate-500">विस्तृत प्रदर्शन रिपोर्ट (Detailed Performance Breakdown)</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="retakeTestBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+            <span>Re-attempt Test</span>
+          </button>
+          <button id="closeResultModalBtn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition">
+            Close &amp; Review
+          </button>
+        </div>
+      </div>
+
+      <!-- Key Metrics -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+        <div class="p-3 bg-blue-50/70 border border-blue-100 rounded-xl">
+          <p class="text-xs text-blue-600 font-semibold">Total Score (अंक)</p>
+          <p class="text-xl sm:text-2xl font-extrabold text-blue-700 mt-1" id="resScore">16.0 / 20</p>
+          <p class="text-[10px] text-slate-500 mt-0.5" id="resPercentage">80.0%</p>
+        </div>
+        <div class="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl">
+          <p class="text-xs text-emerald-600 font-semibold">Accuracy (सटीकता)</p>
+          <p class="text-xl sm:text-2xl font-extrabold text-emerald-700 mt-1" id="resAccuracy">88.9%</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">Correct Attempts</p>
+        </div>
+        <div class="p-3 bg-purple-50/70 border border-purple-100 rounded-xl">
+          <p class="text-xs text-purple-600 font-semibold">Percentile</p>
+          <p class="text-xl sm:text-2xl font-extrabold text-purple-700 mt-1" id="resPercentile">94.2%</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">Top in Candidates</p>
+        </div>
+        <div class="p-3 bg-amber-50/70 border border-amber-100 rounded-xl">
+          <p class="text-xs text-amber-600 font-semibold">Time Taken</p>
+          <p class="text-xl sm:text-2xl font-extrabold text-amber-700 mt-1" id="resTimeTaken">04:32</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">Time Spent</p>
+        </div>
+      </div>
+
+      <!-- Attempt Breakdown -->
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex flex-wrap items-center justify-around gap-2 text-xs">
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+          <span class="text-slate-600">Correct: <strong class="text-slate-900" id="resCorrect">8</strong></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-rose-500"></span>
+          <span class="text-slate-600">Incorrect: <strong class="text-slate-900" id="resIncorrect">1</strong></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+          <span class="text-slate-600">Unattempted: <strong class="text-slate-900" id="resUnattempted">1</strong></span>
+        </div>
+      </div>
+
+      <!-- Solutions List -->
+      <div class="space-y-4 pt-2">
+        <h3 class="font-bold text-base text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+          <span>💡</span> प्रश्नों का विस्तृत हल एवं व्याख्या (Solutions):
+        </h3>
+        <div class="space-y-4" id="solutionsContainer">
+          <!-- Solutions rendered here -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CONFIRM SUBMIT MODAL -->
+  <div id="submitConfirmModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+          <span>⚠️</span> Test Submit करें?
+        </h3>
+        <button id="closeSubmitModalBtn" class="text-slate-400 hover:text-slate-700 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-2">
+        <div class="flex justify-between">
+          <span class="text-slate-600">Total Questions:</span>
+          <strong id="modalTotalQ">10</strong>
+        </div>
+        <div class="flex justify-between text-emerald-600">
+          <span>Answered (हल किए):</span>
+          <strong id="modalAnsweredQ">0</strong>
+        </div>
+        <div class="flex justify-between text-rose-600">
+          <span>Not Answered:</span>
+          <strong id="modalNotAnsweredQ">0</strong>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button id="cancelSubmitBtn" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+          वापस टेस्ट पर जाएं
+        </button>
+        <button id="confirmSubmitBtn" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition">
+          हां, सबमिट करें
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM TEST CREATOR MODAL -->
+  <div id="customTestModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-base text-slate-900 flex items-center gap-2">
+          <span>📝</span> अपना कस्टम टेस्ट बनाएं
+        </h3>
+        <button id="closeCustomTestModalBtn" class="text-slate-400 hover:text-slate-700 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">टेस्ट का नाम (Test Title):</label>
+          <input type="text" id="custTestTitle" placeholder="उदा. Rajasthan CET / Delhi Police Mock" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div class="border-t border-slate-200 pt-3 space-y-2">
+          <input type="text" id="custQTextHi" placeholder="प्रश्न (हिंदी में)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none">
+          <input type="text" id="custQTextEn" placeholder="Question (In English)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="custOpt1" placeholder="Option A" class="border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none">
+            <input type="text" id="custOpt2" placeholder="Option B" class="border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none">
+            <input type="text" id="custOpt3" placeholder="Option C" class="border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none">
+            <input type="text" id="custOpt4" placeholder="Option D" class="border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none">
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="font-semibold text-slate-700">Correct Option:</label>
+            <select id="custCorrectOpt" class="border border-slate-300 rounded-lg px-2 py-1 focus:outline-none">
+              <option value="0">Option A</option>
+              <option value="1">Option B</option>
+              <option value="2">Option C</option>
+              <option value="3">Option D</option>
+            </select>
+          </div>
+          <input type="text" id="custExplanation" placeholder="हल / व्याख्या (Explanation)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button id="cancelCustomTestBtn" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">रद्द करें</button>
+        <button id="saveCustomTestBtn" class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition">टेस्ट शुरू करें</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- APPLICATION LOGIC -->
+  <script>
+    (function() {
+      // Audio tones
+      let audioCtx = null;
+      function playTone(type) {
+        try {
+          if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) audioCtx = new AudioContext();
+          }
+          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+          if (!audioCtx) return;
+
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          if (type === 'click') {
+            osc.frequency.setValueAtTime(450, now);
+            gain.gain.setValueAtTime(0.04, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+          } else if (type === 'success') {
+            osc.frequency.setValueAtTime(520, now);
+            osc.frequency.exponentialRampToValueAtTime(780, now + 0.15);
+            gain.gain.setValueAtTime(0.06, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+          }
+        } catch(e) {}
+      }
+
+      function showToast(msg, type = 'info') {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        const bg = type === 'success' ? 'bg-emerald-800 text-white' : type === 'warning' ? 'bg-amber-800 text-white' : 'bg-slate-900 text-white';
+        t.className = `${bg} px-4 py-2 rounded-xl shadow-lg text-xs font-medium transition-all duration-200 pointer-events-auto`;
+        t.textContent = msg;
+        c.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
+      }
+
+      // --- MOCK TESTS DATA ---
+      const preloadedMockTests = [
+        {
+          id: 'mock_ssc_cgl_1',
+          title: 'SSC CGL & CHSL 2026 Tier 1 Mock',
+          category: 'SSC & Railway',
+          durationMinutes: 15,
+          marksPerQ: 2,
+          negativeMarks: 0.5,
+          questions: [
+            {
+              id: 1,
+              section: 'General Awareness',
+              textHi: 'भारतीय संविधान में मौलिक कर्तव्यों (Fundamental Duties) को किस संविधान संशोधन द्वारा शामिल किया गया था?',
+              textEn: 'By which Constitutional Amendment were Fundamental Duties added to the Indian Constitution?',
+              optionsHi: ['42वां संविधान संशोधन, 1976', '44वां संविधान संशोधन, 1978', '86वां संविधान संशोधन, 2002', '52वां संविधान संशोधन, 1985'],
+              optionsEn: ['42nd Amendment Act, 1976', '44th Amendment Act, 1978', '86th Amendment Act, 2002', '52nd Amendment Act, 1985'],
+              correct: 0,
+              explanationHi: 'सरदार स्वर्ण सिंह समिति की सिफारिश पर 42वें संविधान संशोधन (1976) द्वारा भाग IV-A और अनुच्छेद 51-A जोड़कर 10 मौलिक कर्तव्य जोड़े गए थे (86वें संशोधन से 11वां जोड़ा गया)।',
+              explanationEn: 'Fundamental Duties were added via 42nd Amendment Act 1976 under Article 51-A based on the Swaran Singh Committee recommendations.'
+            },
+            {
+              id: 2,
+              section: 'General Awareness',
+              textHi: 'प्रसिद्ध हवा महल (जयपुर) का निर्माण 1799 ई. में किस शासक द्वारा करवाया गया था?',
+              textEn: 'The famous Hawa Mahal in Jaipur was built in 1799 by which ruler?',
+              optionsHi: ['महाराजा सवाई जयसिंह', 'महाराजा सवाई प्रताप सिंह', 'महाराजा मानसिंह प्रथम', 'महाराजा माधोसिंह द्वितीय'],
+              optionsEn: ['Maharaja Sawai Jai Singh', 'Maharaja Sawai Pratap Singh', 'Maharaja Man Singh I', 'Maharaja Madho Singh II'],
+              correct: 1,
+              explanationHi: 'हवा महल का निर्माण 1799 ई. में सवाई प्रताप सिंह ने करवाया था। इसके वास्तुकार लाल चंद उस्ता थे और इसमें 953 झरोखे हैं।',
+              explanationEn: 'Hawa Mahal was built in 1799 by Maharaja Sawai Pratap Singh and designed by Lal Chand Usta.'
+            },
+            {
+              id: 3,
+              section: 'Quantitative Aptitude',
+              textHi: 'यदि किसी वस्तु का क्रय मूल्य ₹450 है और उसे 20% लाभ पर बेचा जाता है, तो विक्रय मूल्य क्या होगा?',
+              textEn: 'If the cost price of an item is ₹450 and sold at a 20% profit, what is the selling price?',
+              optionsHi: ['₹520', '₹540', '₹560', '₹580'],
+              optionsEn: ['₹520', '₹540', '₹560', '₹580'],
+              correct: 1,
+              explanationHi: 'विक्रय मूल्य = 450 + 20% of 450 = 450 + 90 = ₹540.',
+              explanationEn: 'Selling Price = Cost Price × 1.20 = 450 × 1.20 = ₹540.'
+            },
+            {
+              id: 4,
+              section: 'Quantitative Aptitude',
+              textHi: 'दो संख्याओं का HCF = 12 और LCM = 72 है। यदि पहली संख्या 24 है, तो दूसरी संख्या ज्ञात कीजिए।',
+              textEn: 'The HCF of two numbers is 12 and LCM is 72. If one number is 24, find the other number.',
+              optionsHi: ['36', '48', '32', '28'],
+              optionsEn: ['36', '48', '32', '28'],
+              correct: 0,
+              explanationHi: 'सूत्र: संख्या 1 × संख्या 2 = HCF × LCM. अतः दूसरी संख्या = (12 × 72) / 24 = 36.',
+              explanationEn: 'Number1 × Number2 = HCF × LCM. Number2 = (12 × 72) / 24 = 36.'
+            },
+            {
+              id: 5,
+              section: 'Reasoning',
+              textHi: 'संबंधित संख्या चुनिए: 8 : 64 :: 11 : ?',
+              textEn: 'Select related number: 8 : 64 :: 11 : ?',
+              optionsHi: ['110', '121', '132', '144'],
+              optionsEn: ['110', '121', '132', '144'],
+              correct: 1,
+              explanationHi: 'पैटर्न: पहली संख्या का वर्ग (8² = 64, अतः 11² = 121).',
+              explanationEn: 'Pattern: Square of the number (8² = 64, so 11² = 121).'
+            },
+            {
+              id: 6,
+              section: 'Reasoning',
+              textHi: 'यदि A = 1, CAT = 24, तो POLICE का मान क्या होगा?',
+              textEn: 'If A = 1, CAT = 24, then POLICE = ?',
+              optionsHi: ['57', '60', '63', '65'],
+              optionsEn: ['57', '60', '63', '65'],
+              correct: 1,
+              explanationHi: 'अक्षरों के स्थान मानों का योग: P(16) + O(15) + L(12) + I(9) + C(3) + E(5) = 60.',
+              explanationEn: 'Sum of positions: P(16) + O(15) + L(12) + I(9) + C(3) + E(5) = 60.'
+            },
+            {
+              id: 7,
+              section: 'General Awareness',
+              textHi: 'इंसुलिन (Insulin) हार्मोन मानव शरीर के किस अंग द्वारा स्रावित होता है?',
+              textEn: 'Which human organ secretes the hormone Insulin?',
+              optionsHi: ['यकृत (Liver)', 'अग्न्याशय (Pancreas)', 'थायरॉयड (Thyroid)', 'वृक्क (Kidney)'],
+              optionsEn: ['Liver', 'Pancreas', 'Thyroid', 'Kidney'],
+              correct: 1,
+              explanationHi: 'इंसुलिन अग्न्याशय (Pancreas) की बीटा कोशिकाओं से निकलता है और रक्त में शर्करा को नियंत्रित करता है।',
+              explanationEn: 'Insulin is secreted by Beta cells of the Pancreas to regulate blood glucose.'
+            },
+            {
+              id: 8,
+              section: 'Quantitative Aptitude',
+              textHi: '72 किमी/घंटे की गति से चल रही 300 मीटर लंबी रेलगाड़ी 200 मीटर लंबे पुल को कितने सेकंड में पार करेगी?',
+              textEn: 'A 300m long train running at 72 km/h crosses a 200m bridge in how many seconds?',
+              optionsHi: ['20 सेकंड', '25 सेकंड', '30 सेकंड', '15 सेकंड'],
+              optionsEn: ['20 seconds', '25 seconds', '30 seconds', '15 seconds'],
+              correct: 1,
+              explanationHi: 'गति = 72 × (5/18) = 20 मी/से. कुल दूरी = 300 + 200 = 500 मी. समय = 500 / 20 = 25 सेकंड।',
+              explanationEn: 'Speed = 20 m/s. Distance = 500m. Time = 500 / 20 = 25 seconds.'
+            },
+            {
+              id: 9,
+              section: 'Reasoning',
+              textHi: 'विषम का चयन करें: तांबा, लोहा, पीतल, चांदी।',
+              textEn: 'Find odd one out: Copper, Iron, Brass, Silver.',
+              optionsHi: ['तांबा (Copper)', 'लोहा (Iron)', 'पीतल (Brass)', 'चांदी (Silver)'],
+              optionsEn: ['Copper', 'Iron', 'Brass', 'Silver'],
+              correct: 2,
+              explanationHi: 'पीतल एक मिश्र धातु (Alloy) है, जबकि अन्य तीनों मूल तत्व/धातुएं हैं।',
+              explanationEn: 'Brass is an alloy (Copper + Zinc), whereas others are pure metals.'
+            },
+            {
+              id: 10,
+              section: 'General Awareness',
+              textHi: 'नीति आयोग (NITI Aayog) के पदेन अध्यक्ष कौन होते हैं?',
+              textEn: 'Who is the Ex-officio Chairman of NITI Aayog?',
+              optionsHi: ['राष्ट्रपति', 'प्रधानमंत्री', 'वित्त मंत्री', 'गृह मंत्री'],
+              optionsEn: ['President', 'Prime Minister', 'Finance Minister', 'Home Minister'],
+              correct: 1,
+              explanationHi: 'भारत के प्रधानमंत्री नीति आयोग के पदेन अध्यक्ष होते हैं।',
+              explanationEn: 'The Prime Minister of India serves as the ex-officio Chairman of NITI Aayog.'
+            }
+          ]
+        },
+        {
+          id: 'mock_raj_cet_2',
+          title: 'Rajasthan CET & State Mock',
+          category: 'Rajasthan State Exams',
+          durationMinutes: 10,
+          marksPerQ: 2,
+          negativeMarks: 0.66,
+          questions: [
+            {
+              id: 1,
+              section: 'Rajasthan GK',
+              textHi: 'राजस्थान का राज्य वृक्ष कौन सा है?',
+              textEn: 'What is the state tree of Rajasthan?',
+              optionsHi: ['खेजड़ी (Prosopis cineraria)', 'रोहिड़ा', 'नीम', 'बबूल'],
+              optionsEn: ['Khejri (Prosopis cineraria)', 'Rohida', 'Neem', 'Babul'],
+              correct: 0,
+              explanationHi: 'खेजड़ी (जांटी/शमी) को 1983 में राजस्थान का राज्य वृक्ष घोषित किया गया था।',
+              explanationEn: 'Khejri is the state tree of Rajasthan, declared in 1983.'
+            },
+            {
+              id: 2,
+              section: 'Rajasthan GK',
+              textHi: 'कालीबंगा सभ्यता स्थल राजस्थान के किस जिले में स्थित है?',
+              textEn: 'In which district of Rajasthan is the archaeological site of Kalibangan located?',
+              optionsHi: ['हनुमानगढ़', 'श्री गंगानगर', 'बीकानेर', 'जोधपुर'],
+              optionsEn: ['Hanumangarh', 'Sri Ganganagar', 'Bikaner', 'Jodhpur'],
+              correct: 0,
+              explanationHi: 'कालीबंगा घग्घर नदी के किनारे हनुमानगढ़ जिले में स्थित है।',
+              explanationEn: 'Kalibangan is situated on the Ghaggar river in Hanumangarh district.'
+            },
+            {
+              id: 3,
+              section: 'Rajasthan GK',
+              textHi: '84 खंभों की प्रसिद्ध छतरी कहां स्थित है?',
+              textEn: 'Where is the famous 84-Pillared Cenotaph located?',
+              optionsHi: ['बूंदी', 'अलवर', 'चित्तौड़गढ़', 'कोटा'],
+              optionsEn: ['Bundi', 'Alwar', 'Chittorgarh', 'Kota'],
+              correct: 0,
+              explanationHi: '84 खंभों की छतरी बूंदी में स्थित है।',
+              explanationEn: 'The 84-Pillared Cenotaph is located in Bundi.'
+            },
+            {
+              id: 4,
+              section: 'General Science',
+              textHi: 'विटामिन सी (Vitamin C) का रासायनिक नाम क्या है?',
+              textEn: 'What is the chemical name of Vitamin C?',
+              optionsHi: ['एस्कॉर्बिक एसिड', 'थायमिन', 'रेटिनॉल', 'टोकोफेरोल'],
+              optionsEn: ['Ascorbic Acid', 'Thiamine', 'Retinol', 'Tocopherol'],
+              correct: 0,
+              explanationHi: 'विटामिन सी का रासायनिक नाम एस्कॉर्बिक एसिड है।',
+              explanationEn: 'Chemical name of Vitamin C is Ascorbic Acid.'
+            },
+            {
+              id: 5,
+              section: 'General Science',
+              textHi: 'ध्वनि की तीव्रता (Loudness/Intensity) मापने की इकाई क्या है?',
+              textEn: 'What is the unit of sound intensity/loudness?',
+              optionsHi: ['डेसिबल (Decibel)', 'हर्ट्ज (Hertz)', 'पास्कल', 'कैंडेला'],
+              optionsEn: ['Decibel (dB)', 'Hertz (Hz)', 'Pascal', 'Candela'],
+              correct: 0,
+              explanationHi: 'ध्वनि की तीव्रता डेसिबल (dB) में मापी जाती है।',
+              explanationEn: 'Sound intensity is measured in Decibels (dB).'
+            }
+          ]
+        }
+      ];
+
+      // --- STATE ---
+      let currentLang = 'hi';
+      let activeTest = preloadedMockTests[0]; // Start immediately with Test 1!
+      let currentQIndex = 0;
+      let userResponses = {};
+      let timerInterval = null;
+      let secondsRemaining = 15 * 60;
+      let totalTimeSpent = 0;
+
+      // DOM Elements
+      const langHiBtn = document.getElementById('langHiBtn');
+      const langEnBtn = document.getElementById('langEnBtn');
+      const testSelectDropdown = document.getElementById('testSelectDropdown');
+      const timerDisplay = document.getElementById('timerDisplay');
+      const questionNumberBadge = document.getElementById('questionNumberBadge');
+      const questionSectionBadge = document.getElementById('questionSectionBadge');
+      const questionTextDisplay = document.getElementById('questionTextDisplay');
+      const optionsContainer = document.getElementById('optionsContainer');
+      const sectionTabsContainer = document.getElementById('sectionTabsContainer');
+      const positiveMarks = document.getElementById('positiveMarks');
+      const negativeMarks = document.getElementById('negativeMarks');
+      const sidebarTestName = document.getElementById('sidebarTestName');
+      const questionGridContainer = document.getElementById('questionGridContainer');
+      const mobilePaletteBadge = document.getElementById('mobilePaletteBadge');
+
+      const saveNextBtn = document.getElementById('saveNextBtn');
+      const prevQuestionBtn = document.getElementById('prevQuestionBtn');
+      const markReviewBtn = document.getElementById('markReviewBtn');
+      const clearResponseBtn = document.getElementById('clearResponseBtn');
+
+      const headerSubmitBtn = document.getElementById('headerSubmitBtn');
+      const paletteSubmitBtn = document.getElementById('paletteSubmitBtn');
+      const submitConfirmModal = document.getElementById('submitConfirmModal');
+      const closeSubmitModalBtn = document.getElementById('closeSubmitModalBtn');
+      const cancelSubmitBtn = document.getElementById('cancelSubmitBtn');
+      const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+
+      const resultModal = document.getElementById('resultModal');
+      const closeResultModalBtn = document.getElementById('closeResultModalBtn');
+      const retakeTestBtn = document.getElementById('retakeTestBtn');
+
+      const toggleMobilePaletteBtn = document.getElementById('toggleMobilePaletteBtn');
+      const closeMobilePaletteBtn = document.getElementById('closeMobilePaletteBtn');
+      const paletteSidebar = document.getElementById('paletteSidebar');
+      const paletteBackdrop = document.getElementById('paletteBackdrop');
+
+      const openCustomTestModalBtn = document.getElementById('openCustomTestModalBtn');
+      const customTestModal = document.getElementById('customTestModal');
+      const closeCustomTestModalBtn = document.getElementById('closeCustomTestModalBtn');
+      const cancelCustomTestBtn = document.getElementById('cancelCustomTestBtn');
+      const saveCustomTestBtn = document.getElementById('saveCustomTestBtn');
+
+      // --- INITIALIZE TEST ---
+      function initTest(test) {
+        activeTest = test;
+        currentQIndex = 0;
+        userResponses = {};
+
+        for (let i = 0; i < activeTest.questions.length; i++) {
+          userResponses[i] = {
+            selectedOption: null,
+            status: 'not-visited'
+          };
+        }
+        userResponses[0].status = 'not-answered';
+
+        sidebarTestName.textContent = activeTest.title;
+        positiveMarks.textContent = `+${activeTest.marksPerQ.toFixed(2)}`;
+        negativeMarks.textContent = `-${activeTest.negativeMarks.toFixed(2)}`;
+
+        // Timer
+        secondsRemaining = activeTest.durationMinutes * 60;
+        totalTimeSpent = 0;
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          if (secondsRemaining > 0) {
+            secondsRemaining--;
+            totalTimeSpent++;
+            const m = Math.floor(secondsRemaining / 60);
+            const s = secondsRemaining % 60;
+            timerDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+          } else {
+            clearInterval(timerInterval);
+            submitTestDirectly();
+          }
+        }, 1000);
+
+        renderSectionTabs();
+        renderPaletteGrid();
+        renderCurrentQuestion();
+      }
+
+      // --- LANGUAGE TOGGLE ---
+      langHiBtn.addEventListener('click', () => {
+        currentLang = 'hi';
+        langHiBtn.className = 'px-2 py-0.5 sm:py-1 rounded-md bg-blue-600 text-white shadow-xs transition';
+        langEnBtn.className = 'px-2 py-0.5 sm:py-1 rounded-md text-slate-600 hover:text-slate-900 transition';
+        renderCurrentQuestion();
+      });
+
+      langEnBtn.addEventListener('click', () => {
+        currentLang = 'en';
+        langEnBtn.className = 'px-2 py-0.5 sm:py-1 rounded-md bg-blue-600 text-white shadow-xs transition';
+        langHiBtn.className = 'px-2 py-0.5 sm:py-1 rounded-md text-slate-600 hover:text-slate-900 transition';
+        renderCurrentQuestion();
+      });
+
+      testSelectDropdown.addEventListener('change', (e) => {
+        const found = preloadedMockTests.find(t => t.id === e.target.value);
+        if (found) initTest(found);
+      });
+
+      // --- RENDER SECTION TABS ---
+      function renderSectionTabs() {
+        sectionTabsContainer.innerHTML = '';
+        const sections = [...new Set(activeTest.questions.map(q => q.section))];
+        const currentQSec = activeTest.questions[currentQIndex].section;
+
+        sections.forEach(sec => {
+          const btn = document.createElement('button');
+          const isActive = sec === currentQSec;
+          btn.className = `px-3 py-1 rounded-md text-xs font-semibold transition ${
+            isActive ? 'bg-blue-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+          }`;
+          btn.textContent = sec;
+          btn.addEventListener('click', () => {
+            const firstIdx = activeTest.questions.findIndex(q => q.section === sec);
+            if (firstIdx !== -1) navigateToQuestion(firstIdx);
+          });
+          sectionTabsContainer.appendChild(btn);
+        });
+      }
+
+      // --- RENDER CURRENT QUESTION & OPTIONS (CRITICAL FIX: 100% VISIBLE & CLICKABLE) ---
+      function renderCurrentQuestion() {
+        const q = activeTest.questions[currentQIndex];
+        const isHi = currentLang === 'hi';
+
+        questionNumberBadge.textContent = isHi 
+          ? `प्रश्न ${currentQIndex + 1} / ${activeTest.questions.length}` 
+          : `Question ${currentQIndex + 1} / ${activeTest.questions.length}`;
+
+        questionSectionBadge.textContent = q.section;
+        mobilePaletteBadge.textContent = `${currentQIndex + 1}/${activeTest.questions.length}`;
+        questionTextDisplay.textContent = isHi ? q.textHi : q.textEn;
+
+        // Render Options with clear radio circles and bold (A), (B), (C), (D) badges
+        optionsContainer.innerHTML = '';
+        const opts = isHi ? q.optionsHi : q.optionsEn;
+        const currentSelected = userResponses[currentQIndex].selectedOption;
+
+        opts.forEach((optText, optIdx) => {
+          const isSelected = currentSelected === optIdx;
+          const optLetter = String.fromCharCode(65 + optIdx); // A, B, C, D
+
+          const optDiv = document.createElement('div');
+          optDiv.className = `group flex items-center gap-3 p-3.5 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${
+            isSelected 
+              ? 'bg-blue-50/90 border-blue-600 shadow-md ring-1 ring-blue-500' 
+              : 'bg-white border-slate-200 hover:border-blue-400 hover:bg-slate-50/80 shadow-xs'
+          }`;
+
+          optDiv.innerHTML = `
+            <!-- Radio Circle -->
+            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+              isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-400 bg-white group-hover:border-blue-500'
+            }">
+              ${isSelected ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
+            </div>
+
+            <!-- Letter Badge -->
+            <div class="w-6 h-6 rounded-md flex items-center justify-center text-xs font-extrabold flex-shrink-0 ${
+              isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-300'
+            }">
+              ${optLetter}
+            </div>
+
+            <!-- Option Text -->
+            <div class="text-xs sm:text-sm text-slate-800 leading-snug font-medium flex-1">
+              ${optText}
+            </div>
+          `;
+
+          // Handle click to select option
+          optDiv.addEventListener('click', () => {
+            playTone('click');
+            userResponses[currentQIndex].selectedOption = optIdx;
+            userResponses[currentQIndex].status = 'answered';
+            renderCurrentQuestion();
+            updatePaletteCounts();
+          });
+
+          optionsContainer.appendChild(optDiv);
+        });
+
+        // Prev button disable check
+        prevQuestionBtn.disabled = currentQIndex === 0;
+        prevQuestionBtn.className = `px-3 py-2 rounded-lg border text-xs font-semibold transition ${
+          currentQIndex === 0 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+        }`;
+
+        renderSectionTabs();
+        updatePaletteStyles();
+        updatePaletteCounts();
+      }
+
+      // --- SAVE & NEXT / MARK FOR REVIEW ---
+      saveNextBtn.addEventListener('click', () => {
+        playTone('click');
+        const state = userResponses[currentQIndex];
+        if (state.selectedOption !== null) {
+          state.status = 'answered';
+        } else {
+          state.status = 'not-answered';
+        }
+
+        if (currentQIndex < activeTest.questions.length - 1) {
+          navigateToQuestion(currentQIndex + 1);
+        } else {
+          showToast('अंतिम प्रश्न पर पहुंच गए हैं। Submit बटन दबाएं।', 'info');
+          updatePaletteStyles();
+          updatePaletteCounts();
+        }
+      });
+
+      markReviewBtn.addEventListener('click', () => {
+        playTone('click');
+        const state = userResponses[currentQIndex];
+        state.status = state.selectedOption !== null ? 'marked-answered' : 'marked';
+
+        if (currentQIndex < activeTest.questions.length - 1) {
+          navigateToQuestion(currentQIndex + 1);
+        } else {
+          updatePaletteStyles();
+          updatePaletteCounts();
+        }
+      });
+
+      clearResponseBtn.addEventListener('click', () => {
+        playTone('click');
+        userResponses[currentQIndex].selectedOption = null;
+        userResponses[currentQIndex].status = 'not-answered';
+        renderCurrentQuestion();
+        showToast('उत्तर साफ़ कर दिया गया (Cleared)', 'info');
+      });
+
+      prevQuestionBtn.addEventListener('click', () => {
+        if (currentQIndex > 0) navigateToQuestion(currentQIndex - 1);
+      });
+
+      function navigateToQuestion(idx) {
+        currentQIndex = idx;
+        if (userResponses[idx].status === 'not-visited') {
+          userResponses[idx].status = 'not-answered';
+        }
+        renderCurrentQuestion();
+      }
+
+      // --- QUESTION PALETTE GRID ---
+      function renderPaletteGrid() {
+        questionGridContainer.innerHTML = '';
+        for (let i = 0; i < activeTest.questions.length; i++) {
+          const btn = document.createElement('button');
+          btn.className = 'w-9 h-9 rounded-lg font-bold text-xs flex items-center justify-center transition shadow-xs relative border';
+          btn.textContent = (i + 1).toString();
+          btn.id = `paletteBtn_${i}`;
+          btn.addEventListener('click', () => {
+            navigateToQuestion(i);
+            closeMobilePalette();
+          });
+          questionGridContainer.appendChild(btn);
+        }
+        updatePaletteStyles();
+        updatePaletteCounts();
+      }
+
+      function updatePaletteStyles() {
+        for (let i = 0; i < activeTest.questions.length; i++) {
+          const btn = document.getElementById(`paletteBtn_${i}`);
+          if (!btn) continue;
+          const status = userResponses[i].status;
+
+          btn.className = 'w-9 h-9 rounded-lg font-bold text-xs flex items-center justify-center transition shadow-xs relative border ';
+          if (i === currentQIndex) {
+            btn.className += 'ring-2 ring-blue-600 ring-offset-2 ';
+          }
+
+          if (status === 'answered') btn.className += 'status-answered';
+          else if (status === 'not-answered') btn.className += 'status-not-answered';
+          else if (status === 'marked') btn.className += 'status-marked';
+          else if (status === 'marked-answered') btn.className += 'status-marked-answered';
+          else btn.className += 'status-not-visited';
+        }
+      }
+
+      function updatePaletteCounts() {
+        let answered = 0;
+        let notAnswered = 0;
+        let marked = 0;
+        let notVisited = 0;
+
+        for (let i = 0; i < activeTest.questions.length; i++) {
+          const st = userResponses[i].status;
+          if (st === 'answered' || st === 'marked-answered') answered++;
+          else if (st === 'marked') marked++;
+          else if (st === 'not-answered') notAnswered++;
+          else notVisited++;
+        }
+
+        document.getElementById('countAnswered').textContent = answered;
+        document.getElementById('countNotAnswered').textContent = notAnswered;
+        document.getElementById('countMarked').textContent = marked;
+        document.getElementById('countNotVisited').textContent = notVisited;
+      }
+
+      // --- MOBILE PALETTE DRAWER TOGGLE ---
+      function openMobilePalette() {
+        paletteSidebar.classList.remove('translate-x-full');
+        paletteBackdrop.classList.remove('hidden');
+      }
+
+      function closeMobilePalette() {
+        paletteSidebar.classList.add('translate-x-full');
+        paletteBackdrop.classList.add('hidden');
+      }
+
+      toggleMobilePaletteBtn.addEventListener('click', openMobilePalette);
+      closeMobilePaletteBtn.addEventListener('click', closeMobilePalette);
+      paletteBackdrop.addEventListener('click', closeMobilePalette);
+
+      // --- SUBMISSION FLOW ---
+      function openSubmitModal() {
+        let answered = 0;
+        let notAnswered = 0;
+        for (let i = 0; i < activeTest.questions.length; i++) {
+          const st = userResponses[i].status;
+          if (st === 'answered' || st === 'marked-answered') answered++;
+          else notAnswered++;
+        }
+        document.getElementById('modalTotalQ').textContent = activeTest.questions.length;
+        document.getElementById('modalAnsweredQ').textContent = answered;
+        document.getElementById('modalNotAnsweredQ').textContent = notAnswered;
+        submitConfirmModal.classList.remove('hidden');
+      }
+
+      headerSubmitBtn.addEventListener('click', openSubmitModal);
+      paletteSubmitBtn.addEventListener('click', openSubmitModal);
+      closeSubmitModalBtn.addEventListener('click', () => submitConfirmModal.classList.add('hidden'));
+      cancelSubmitBtn.addEventListener('click', () => submitConfirmModal.classList.add('hidden'));
+
+      confirmSubmitBtn.addEventListener('click', () => {
+        submitConfirmModal.classList.add('hidden');
+        submitTestDirectly();
+      });
+
+      function submitTestDirectly() {
+        clearInterval(timerInterval);
+        playTone('success');
+
+        let correct = 0;
+        let incorrect = 0;
+        let unattempted = 0;
+        let score = 0;
+
+        activeTest.questions.forEach((q, idx) => {
+          const choice = userResponses[idx].selectedOption;
+          if (choice === null) {
+            unattempted++;
+          } else if (choice === q.correct) {
+            correct++;
+            score += activeTest.marksPerQ;
+          } else {
+            incorrect++;
+            score -= activeTest.negativeMarks;
+          }
+        });
+
+        score = Math.max(0, score);
+        const maxScore = activeTest.questions.length * activeTest.marksPerQ;
+        const totalAttempts = correct + incorrect;
+        const accuracy = totalAttempts > 0 ? ((correct / totalAttempts) * 100).toFixed(1) : 0;
+        const percent = ((score / maxScore) * 100).toFixed(1);
+
+        const mins = Math.floor(totalTimeSpent / 60);
+        const secs = totalTimeSpent % 60;
+
+        document.getElementById('resultTestTitle').textContent = `${activeTest.title} - Scorecard`;
+        document.getElementById('resScore').textContent = `${score.toFixed(1)} / ${maxScore}`;
+        document.getElementById('resPercentage').textContent = `${percent}% Total`;
+        document.getElementById('resAccuracy').textContent = `${accuracy}%`;
+        document.getElementById('resPercentile').textContent = `${Math.min(99.4, Math.max(50, (parseFloat(percent) * 1.05))).toFixed(1)}%`;
+        document.getElementById('resTimeTaken').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        document.getElementById('resCorrect').textContent = correct;
+        document.getElementById('resIncorrect').textContent = incorrect;
+        document.getElementById('resUnattempted').textContent = unattempted;
+
+        // Render Solutions
+        renderSolutions();
+
+        resultModal.classList.remove('hidden');
+        showToast('टेस्ट सबमिट हो गया! अपना स्कोर नीचे देखें।', 'success');
+      }
+
+      function renderSolutions() {
+        const container = document.getElementById('solutionsContainer');
+        container.innerHTML = '';
+        const isHi = currentLang === 'hi';
+
+        activeTest.questions.forEach((q, idx) => {
+          const userChoice = userResponses[idx].selectedOption;
+          const isCorrect = userChoice === q.correct;
+          const isUnattempted = userChoice === null;
+
+          const card = document.createElement('div');
+          card.className = `p-4 rounded-xl border-2 ${
+            isCorrect ? 'bg-emerald-50/50 border-emerald-300' : isUnattempted ? 'bg-slate-50 border-slate-200' : 'bg-rose-50/50 border-rose-300'
+          } space-y-2.5`;
+
+          const opts = isHi ? q.optionsHi : q.optionsEn;
+          const qText = isHi ? q.textHi : q.textEn;
+          const explanation = isHi ? q.explanationHi : q.explanationEn;
+
+          let badge = '';
+          if (isCorrect) badge = `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">✓ Correct (+${activeTest.marksPerQ})</span>`;
+          else if (isUnattempted) badge = `<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">Not Attempted (0)</span>`;
+          else badge = `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">✗ Incorrect (-${activeTest.negativeMarks})</span>`;
+
+          let optList = '';
+          opts.forEach((opt, oIdx) => {
+            const isAnswer = oIdx === q.correct;
+            const isUserWrong = userChoice === oIdx && !isCorrect;
+
+            let st = 'border-slate-200 bg-white text-slate-700';
+            let mark = '';
+            if (isAnswer) {
+              st = 'border-emerald-500 bg-emerald-100/80 text-emerald-950 font-bold';
+              mark = '✓ सही उत्तर (Correct)';
+            } else if (isUserWrong) {
+              st = 'border-rose-400 bg-rose-100 text-rose-950 line-through';
+              mark = '✗ आपका विकल्प';
+            }
+
+            optList += `
+              <div class="p-2 sm:p-2.5 rounded-lg border text-xs sm:text-sm flex items-center justify-between ${st}">
+                <span><strong>${String.fromCharCode(65 + oIdx)}.</strong> ${opt}</span>
+                <span class="text-[11px] font-bold">${mark}</span>
+              </div>
+            `;
+          });
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-xs text-blue-700">प्रश्न ${idx + 1} (${q.section})</span>
+              ${badge}
+            </div>
+            <p class="text-sm font-bold text-slate-900">${qText}</p>
+            <div class="space-y-1.5 pt-1">${optList}</div>
+            <div class="mt-2 p-2.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700">
+              <strong class="text-blue-700">💡 विस्तृत व्याख्या:</strong> ${explanation}
+            </div>
+          `;
+
+          container.appendChild(card);
+        });
+      }
+
+      closeResultModalBtn.addEventListener('click', () => resultModal.classList.add('hidden'));
+      retakeTestBtn.addEventListener('click', () => {
+        resultModal.classList.add('hidden');
+        initTest(activeTest);
+      });
+
+      // --- CUSTOM TEST CREATOR ---
+      openCustomTestModalBtn.addEventListener('click', () => customTestModal.classList.remove('hidden'));
+      closeCustomTestModalBtn.addEventListener('click', () => customTestModal.classList.add('hidden'));
+      cancelCustomTestBtn.addEventListener('click', () => customTestModal.classList.add('hidden'));
+
+      saveCustomTestBtn.addEventListener('click', () => {
+        const title = document.getElementById('custTestTitle').value.trim() || 'My Custom Mock';
+        const qHi = document.getElementById('custQTextHi').value.trim() || 'भारत की राजधानी क्या है?';
+        const qEn = document.getElementById('custQTextEn').value.trim() || 'What is the capital of India?';
+        const opt1 = document.getElementById('custOpt1').value.trim() || 'नई दिल्ली';
+        const opt2 = document.getElementById('custOpt2').value.trim() || 'मुंबई';
+        const opt3 = document.getElementById('custOpt3').value.trim() || 'कोलकाता';
+        const opt4 = document.getElementById('custOpt4').value.trim() || 'जयपुर';
+        const corr = parseInt(document.getElementById('custCorrectOpt').value) || 0;
+        const exp = document.getElementById('custExplanation').value.trim() || 'नई दिल्ली भारत की आधिकारिक राजधानी है।';
+
+        const newTest = {
+          id: 'custom_' + Date.now(),
+          title: title,
+          category: 'Custom',
+          durationMinutes: 10,
+          marksPerQ: 2,
+          negativeMarks: 0.5,
+          questions: [
+            {
+              id: 1,
+              section: 'Custom Section',
+              textHi: qHi,
+              textEn: qEn,
+              optionsHi: [opt1, opt2, opt3, opt4],
+              optionsEn: [opt1, opt2, opt3, opt4],
+              correct: corr,
+              explanationHi: exp,
+              explanationEn: exp
+            }
+          ]
+        };
+
+        preloadedMockTests.push(newTest);
+        const opt = document.createElement('option');
+        opt.value = newTest.id;
+        opt.textContent = newTest.title;
+        testSelectDropdown.appendChild(opt);
+        testSelectDropdown.value = newTest.id;
+
+        customTestModal.classList.add('hidden');
+        showToast('कस्टम टेस्ट तैयार हो गया!', 'success');
+        initTest(newTest);
+      });
+
+      // START APP IMMEDIATELY
+      initTest(preloadedMockTests[0]);
+
+    })();
+  </script>
+</body>
+</html>
